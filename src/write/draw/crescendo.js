@@ -18,7 +18,11 @@ function drawCrescendo(renderer, params, selectables) {
 	} else {
 		el = drawLine(renderer, y, y + height / 2, y + height, y + height / 2, left, right);
 	}
-	selectables.wrapSvgEl({ el_type: "dynamicDecoration", startChar: -1, endChar: -1 }, el);
+	var startChar = (params.anchor1?.abcelem?.startChar) || -1;
+	var endChar = (params.anchor1?.abcelem?.endChar) || -1;
+	var anchorTwostartChar = (params.anchor2?.abcelem?.startChar) || -1;
+	var anchorTwoEndChar = (params.anchor2?.abcelem?.endChar) || -1;
+	selectables.wrapSvgEl({ el_type: "dynamicDecoration", startChar: startChar, endChar: endChar, anchorTwostartChar: anchorTwostartChar, anchorTwoEndChar: anchorTwoEndChar }, el);
 	return [el];
 }
 
