@@ -39,7 +39,10 @@ function drawEnding(renderer, params, linestartx, lineendx, selectables) {
 			name: params.text
 		});
 	var g = renderer.paper.closeGroup();
-	selectables.wrapSvgEl({ el_type: "ending", startChar: -1, endChar: -1 }, g);
+	var startChar = (params.abcelem && params.abcelem.startChar) || 0;
+	var endChar = (params.abcelem && params.abcelem.endChar) || 0;
+	console.log("Start of ending", startChar)
+	selectables.wrapSvgEl({ el_type: "ending", startChar: startChar, endChar: endChar }, g);
 	return [g];
 }
 
