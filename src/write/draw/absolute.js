@@ -20,6 +20,12 @@ function drawAbsolute(renderer, params, bartop, selectables, staffPos) {
 				if (child.type === "symbol" && child.c && child.c.indexOf('notehead') >= 0) {
 					el.setAttribute('class', 'abcjs-notehead')
 				}
+				if (el && child.chordPos && child.name.indexOf('flags.') !== 0) {
+					var klass = el.getAttribute("class")
+					if (klass) klass = klass + ' abcjs-chord-pos-'+child.chordPos
+					else klass = 'abcjs-chord-pos-'+child.chordPos
+					el.setAttribute('class', klass)
+				}
 		}
 	}
 	var klass = params.type;

@@ -191,7 +191,7 @@ describe("Transpose Output", function () {
 		"V: 2\n" +
 		'D,_E,^F,^G, "N.C."A,B,C"^Coda"D| z8|\n' +
 		"V: 1\n" +
-		"d_e=f^g [eac']__bc'd'|\n" +
+		"d_e=f^g [ac'e]__bc'd'|\n" +
 		"V: 2\n" +
 		"d'_e'f'^g' a'b'c''Td''|\n"
 
@@ -202,6 +202,14 @@ describe("Transpose Output", function () {
 	var abcChordsExpected = "T: Transpose Output\n" +
 		"K: E\n" +
 		'[EFG] [_EF^G] [=F=G_A] |\n'
+
+	var abcChordsSpaced = "T: Transpose Output\n" +
+		"K: D\n" +
+		'[D E  F] [ _D   E ^F ] [    _E=F             _G ] [ F2 ^F4  G3/2  ] |\n'
+
+	var abcChordsSpacedExpected = "T: Transpose Output\n" +
+		"K: E\n" +
+		'[E F  G] [ _E   F ^G ] [    =F=G             _A ] [ G2 ^G4  A3/2  ] |\n'
 
 	var abcChordSymbols = 'X:1\n' +
 		"T: Transpose Output\n" +
@@ -252,6 +260,14 @@ describe("Transpose Output", function () {
 
 	var abcMinorExpected = "T: Transpose Output\n" +
 		"K: F#m\n" +
+		"FGAB|cdef|\n"
+
+	var abcAeolian = "T: Transpose Output\n" +
+		"K: EAeo\n" +
+		"EFGA|Bcde|\n"
+
+	var abcAeolianExpected = "T: Transpose Output\n" +
+		"K: F#Aeo\n" +
 		"FGAB|cdef|\n"
 
 	var abcNone = "T: Transpose Output\n" +
@@ -306,13 +322,61 @@ describe("Transpose Output", function () {
 
 	var abcUnusualExpected = "\n\nX:1\nT: Transpose Output\n" +
 		"K:G#min\n" +
-		'{/AB}c | [A3_e3] | =B !arpeggio!B !arpeggio![DFA^d] | E .- E | {B}c"<2"{d}+1+c ""_A-_A"E"|B>c|"<2"(ef)| [Ac]>[Bd] |\n'
+		'{/AB}c | [A3_e3] | =B !arpeggio!B !arpeggio![DFA^d] | E .- E | {B}c"<2"{d}+1+c ""_A-_A"E"|B>c|"<2"(ef)| [cA]>[dB] |\n'
 
 	var abcTemp = `T: Transpose Output
 `
 
 	var abcTempExpected = `T: Transpose Output
 `
+
+	var abcDorWithSpace = "X:1\n" +
+		"K:G dor\n" +
+		"G\n"
+
+	var abcDorWithSpaceExpected = "X:1\n" +
+		"K:F# dor\n" +
+		"F\n"
+
+	var abcMissesAccidental = "L:1/4\n" +
+		"K:C\n" +
+		"^C =C|=C |"
+
+	var abcMissesAccidentalExpected = "L:1/4\n" +
+		"K:Bb\n" +
+		"=B, _B,|_B, |"
+
+	var abcDimChords = "L:1/4\n" +
+		"K:C\n" +
+		"\"Ebdim7\" C \"E°7\" C |"
+
+	var abcDimChordsExpected1 = "L:1/4\nK:Db\n\"Edim7\" D \"F°7\" D |"
+	var abcDimChordsExpected2 = "L:1/4\nK:D\n\"Fdim7\" D \"F#°7\" D |"
+	var abcDimChordsExpected3 = "L:1/4\nK:Eb\n\"Gbdim7\" E \"G°7\" E |"
+	var abcDimChordsExpected4 = "L:1/4\nK:E\n\"Gdim7\" E \"G#°7\" E |"
+	var abcDimChordsExpected5 = "L:1/4\nK:F\n\"Abdim7\" F \"A°7\" F |"
+	var abcDimChordsExpected6 = "L:1/4\nK:Gb\n\"Adim7\" G \"Bb°7\" G |"
+	var abcDimChordsExpected7 = "L:1/4\nK:G\n\"Bbdim7\" G \"B°7\" G |"
+	var abcDimChordsExpected8 = "L:1/4\nK:Ab\n\"Bdim7\" A \"C°7\" A |"
+	var abcDimChordsExpected9 = "L:1/4\nK:A\n\"Cdim7\" A \"C#°7\" A |"
+	var abcDimChordsExpected10 = "L:1/4\nK:Bb\n\"Dbdim7\" B \"D°7\" B |"
+	var abcDimChordsExpected11 = "L:1/4\nK:B\n\"Ddim7\" B \"Eb°7\" B |"
+
+	const abcSpaceBeforeChord = `X:1
+K:Bb
+[c2A2] >[A2^F2] | !coda![c'2A,,2]"Gm"[A,2^A2] |[A,2A2] >[AA] |`
+
+	const abcSpaceBeforeChordExpected = `X:1
+K:A
+[B2G2] >[G2^E2] | !coda![b2G,,2]"F#m"[G,2^^G2] |[G,2G2] >[GG] |`
+
+	const abcClefSpecified = `X: 1
+K: Bb clef=treble
+F`
+
+	const abcClefSpecifiedExpected = `X: 1
+K: A clef=treble
+E`
 
 	it("output-cooley", function () {
 		outputTest(abcCooley, abcCooleyExpected0, 0, "★★ up 0 ★★")
@@ -349,6 +413,10 @@ describe("Transpose Output", function () {
 		outputTest(abcChords, abcChordsExpected, 2)
 	})
 
+	it("output-transpose-chords-spaced", function () {
+		outputTest(abcChordsSpaced, abcChordsSpacedExpected, 2)
+	})
+
 	it("output-transpose-chord-symbols", function () {
 		outputTest(abcChordSymbols, abcChordSymbolsExpected, 2)
 	})
@@ -373,6 +441,10 @@ describe("Transpose Output", function () {
 		outputTest(abcMinor, abcMinorExpected, 2)
 	})
 
+	it("output-aeolian", function () {
+		outputTest(abcAeolian, abcAeolianExpected, 2)
+	})
+
 	it("output-none", function () {
 		outputTest(abcNone, abcNoneExpected, 2)
 	})
@@ -395,6 +467,29 @@ describe("Transpose Output", function () {
 
 	it("output-unusual", function () {
 		outputTest(abcUnusual, abcUnusualExpected, 2)
+	})
+
+	it("output-dor-space", function () {
+		outputTest(abcDorWithSpace, abcDorWithSpaceExpected, -1)
+		outputTest(abcDorWithSpaceExpected, abcDorWithSpace, 1)
+	})
+
+	it("output-miss-accidental", function () {
+		outputTest(abcMissesAccidental, abcMissesAccidentalExpected, -2)
+	})
+
+	it("output-dim-chords", function () {
+		outputTest(abcDimChords, abcDimChordsExpected1, 1)
+		outputTest(abcDimChords, abcDimChordsExpected2, 2)
+		outputTest(abcDimChords, abcDimChordsExpected3, 3)
+		outputTest(abcDimChords, abcDimChordsExpected4, 4)
+		outputTest(abcDimChords, abcDimChordsExpected5, 5)
+		outputTest(abcDimChords, abcDimChordsExpected6, 6)
+		outputTest(abcDimChords, abcDimChordsExpected7, 7)
+		outputTest(abcDimChords, abcDimChordsExpected8, 8)
+		outputTest(abcDimChords, abcDimChordsExpected9, 9)
+		outputTest(abcDimChords, abcDimChordsExpected10, 10)
+		outputTest(abcDimChords, abcDimChordsExpected11, 11)
 	})
 
 	// it("output-temp", function () {
@@ -436,6 +531,15 @@ describe("Transpose Output", function () {
 		chai.assert.equal(relativeMode("C", "Dorian"), "D", 'relativeMode')
 
 	})
+
+	it("space-before-chord", function () {
+		outputTest(abcSpaceBeforeChord, abcSpaceBeforeChordExpected, -1)
+	})
+
+	it("clef-specified", function () {
+		outputTest(abcClefSpecified, abcClefSpecifiedExpected, -1)
+	})
+
 })
 
 function outputTest(abc, expected, steps, comment) {

@@ -271,6 +271,7 @@ AbstractEngraver.prototype.createABCVoice = function (abcline, tempo, s, v, isSi
 		}
 		pos += ret.count;
 	}
+	this.decoration.endLine(voice)
 	this.pushCrossLineElems(s, v);
 };
 
@@ -348,8 +349,11 @@ AbstractEngraver.prototype.createABCElement = function (isFirstStaff, isSingleLi
 			elemset[0] = abselem;
 			break;
 		case "tempo":
+			// MAE 20 Nov 2025 For %%printtempo after initial header
 			var abselem3 = new AbsoluteElement(elem, 0, 0, 'tempo', this.tuneNumber);
-			abselem3.addFixedX(new TempoElement(elem, this.tuneNumber, createNoteHead));
+			if (!elem.suppress){
+				abselem3.addFixedX(new TempoElement(elem, this.tuneNumber, createNoteHead));
+			}
 			elemset[0] = abselem3;
 			break;
 		case "style":
@@ -714,8 +718,9 @@ AbstractEngraver.prototype.addNoteToAbcElement = function (abselem, elem, dot, s
 		}
 
 		var hasStem = !nostem && durlog <= -1;
+		var chordPos = pp > 1 ? p+1 : null
 		var ret = createNoteHead(abselem, c, elem.pitches[p],
-			{ dir: dir, extrax: -roomTaken, flag: flag, dot: dot, dotshiftx: dotshiftx, scale: this.voiceScale, accidentalSlot: accidentalSlot, shouldExtendStem: !stemdir, printAccidentals: !voice.isPercussion });
+			{ dir: dir, extrax: -roomTaken, flag: flag, dot: dot, dotshiftx: dotshiftx, scale: this.voiceScale, accidentalSlot: accidentalSlot, shouldExtendStem: !stemdir, printAccidentals: !voice.isPercussion, chordPos: chordPos });
 		symbolWidth = Math.max(glyphs.getSymbolWidth(c), symbolWidth);
 		abselem.extraw -= ret.extraLeft;
 		noteHead = ret.notehead;
@@ -761,7 +766,7 @@ AbstractEngraver.prototype.addNoteToAbcElement = function (abselem, elem, dot, s
 	return { noteHead: noteHead, roomTaken: roomTaken, roomTakenRight: roomTakenRight, min: min, additionalLedgers: additionalLedgers, dir: dir, symbolWidth: symbolWidth };
 };
 
-AbstractEngraver.prototype.addLyric = function (abselem, elem) {
+AbstractEngraver.prototype.addLyric = function (abselem, elem, voiceNumber) {
 	var lyricStr = "";
 	elem.lyric.forEach(function (ly) {
 		var div = ly.divider === ' ' ? "" : ly.divider;
@@ -769,7 +774,7 @@ AbstractEngraver.prototype.addLyric = function (abselem, elem) {
 	});
 	var lyricDim = this.getTextSize.calc(lyricStr, 'vocalfont', "lyric");
 	var position = elem.positioning ? elem.positioning.vocalPosition : 'below';
-	abselem.addCentered(new RelativeElement(lyricStr, 0, lyricDim.width, undefined, { type: "lyric", position: position, height: lyricDim.height / spacing.STEP, dim: this.getTextSize.attr('vocalfont', "lyric") }));
+	abselem.addCentered(new RelativeElement(lyricStr, 0, lyricDim.width, undefined, { type: "lyric", position: position, height: lyricDim.height / spacing.STEP, dim: this.getTextSize.attr('vocalfont', "lyric"), voiceNumber: voiceNumber }));
 };
 
 AbstractEngraver.prototype.createNote = function (elem, nostem, isSingleLineStaff, voice) { //stem presence: true for drawing stemless notehead
@@ -823,7 +828,7 @@ AbstractEngraver.prototype.createNote = function (elem, nostem, isSingleLineStaf
 	}
 
 	if (elem.lyric !== undefined) {
-		this.addLyric(abselem, elem);
+		this.addLyric(abselem, elem, voice.voicenumber);
 	}
 
 	if (elem.gracenotes !== undefined) {
@@ -943,7 +948,8 @@ AbstractEngraver.prototype.addMeasureNumber = function (number, abselem) {
 	var dx = 0;
 	if (abselem.isClef) // If this is a clef rather than bar line, then the number shouldn't be centered because it could overlap the left side. This is an easy way to let it be centered but move it over, too.
 		dx += measureNumDim.width / 2
-	var vert = measureNumDim.width > 10 && abselem.abcelem.type === "treble" ? 13 : 11
+	// MAE 1 Oct 2024 - Change 13 to 13.5 since previously bar numbers were very slightly overlapping the top of the clef
+	var vert = measureNumDim.width > 10 && abselem.abcelem.type === "treble" ? 13.5 : 11
 	abselem.addFixed(new RelativeElement(number, dx, measureNumDim.width, vert + measureNumDim.height / spacing.STEP, { type: "barNumber", dim: this.getTextSize.attr("measurefont", 'bar-number') }));
 };
 
@@ -1025,13 +1031,16 @@ AbstractEngraver.prototype.createBarLine = function (voice, elem, isFirstStaff) 
 		abselem.addRight(new RelativeElement("dots.dot", dx, 1, 5));
 	} // 2 is hardcoded
 
-	if (elem.startEnding && isFirstStaff) { // only put the first & second ending marks on the first staff
-		var textWidth = this.getTextSize.calc(elem.startEnding, "repeatfont", '').width;
-		abselem.minspacing += textWidth + 10; // Give plenty of room for the ending number.
-		this.partstartelem = new EndingElem(elem.startEnding, anchor, null);
-		voice.addOther(this.partstartelem);
+	if (elem.startEnding && isFirstStaff) {
+		// MAE 17 May 2025 - Fixes drawing issue
+		if (voice.voicenumber === 0){
+			// only put the first & second ending marks on the first staff
+			var textWidth = this.getTextSize.calc(elem.startEnding, "repeatfont", '').width;
+			abselem.minspacing += textWidth + 10; // Give plenty of room for the ending number.
+			this.partstartelem = new EndingElem(elem.startEnding, anchor, null);
+			voice.addOther(this.partstartelem);
+		}
 	}
-
 	// Add a little space to the left of the bar line so that nothing can crowd it.
 	abselem.extraw -= 5;
 
